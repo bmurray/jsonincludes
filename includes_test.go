@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -102,22 +101,16 @@ type testOpenerString string
 
 func (t testOpenerString) Data(name string) ([]byte, error) {
 	n := filepath.Join(string(t), name)
-	log.Println("testOpenerString", string(t), name, n)
-
 	f, err := os.Open(n)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
-
-	log.Println("testOpenerString", string(t), name, n)
 	b := bytes.NewBuffer(nil)
 	_, err = io.Copy(b, f)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("testOpenerString", string(t), name, n, b.String())
-
 	return b.Bytes(), nil
 }
 
@@ -133,7 +126,6 @@ func (t testOpenerStruct) Data(name string) ([]byte, error) {
 	}
 	defer f.Close()
 	return io.ReadAll(f)
-
 }
 
 type testReaderString string
@@ -141,17 +133,6 @@ type testReaderString string
 func (t testReaderString) Reader(name string) (io.Reader, error) {
 	n := filepath.Join(string(t), name)
 	return os.Open(n)
-	// f, err := os.Open(n)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// b := bytes.NewBuffer(nil)
-	// _, err = io.Copy(b, f)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// return b, nil
 }
 
 type testReaderStruct struct {
@@ -240,5 +221,46 @@ func TestBadInterfaces(t *testing.T) {
 		t.Fatal("expected error")
 	} else {
 		t.Log(err)
+	}
+}
+
+type testReaderHidden struct {
+	Name     string `json:"name"`
+	Age      int    `json:"age"`
+	rootPath string
+}
+
+func (t testReaderHidden) Reader(name string) (io.Reader, error) {
+	n := filepath.Join(string(t.rootPath), name)
+	return os.Open(n)
+}
+
+func TestHiddenFolder(t *testing.T) {
+	var obj JsonInclude[testReaderHidden]
+	obj.Val.rootPath = "./testdata"
+	var x = struct {
+		Obj JsonInclude[testReaderHidden] `json:"obj"`
+	}{obj}
+	err := json.Unmarshal([]byte(`{"obj": {"include": "struct.json"}}`), &x)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if x.Obj.Val.Name != "Sphinx" {
+		t.Fatal("include struct not loaded")
+	}
+	output := &bytes.Buffer{}
+	err = json.NewEncoder(output).Encode(x)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(output.String())
+	var y = struct {
+		Obj JsonInclude[testReaderHidden] `json:"obj"`
+	}{}
+	if err := json.Unmarshal(output.Bytes(), &y); err != nil {
+		t.Fatal(err)
+	}
+	if y.Obj.Val.Name != "Sphinx" {
+		t.Fatal("include struct not loaded", y.Obj.Val.Name)
 	}
 }
