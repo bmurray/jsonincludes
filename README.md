@@ -6,7 +6,14 @@ This package makes adding external includes easy. You can import parts of a JSON
 ###### Install
 `go get github.com/bmurray/jsonincludes`
 
+###### Usage Notes
 
+The default behavior of the include is to open the file relative to the current directory. This can be overridden using the `JsonData`, `JsonReader`, and `JsonPather` interfaces.
+
+Check the _tests.go file for a deeper usage example.
+
+
+### Basic Usage
 
 ###### rootfile.json
 ```json
@@ -79,5 +86,80 @@ func main() {
 	if err != nil {
 		// Handle the error
 	}
+    // obj.ObjString.Val and obj.ObjIncludeString.Val contains the data regardless if it was embedded or included
 }
+```
+
+
+### Advanced Usage with Global Prefix path
+
+```json
+{
+    "objstring": {
+        "include": "string.json"
+    },
+}
+```
+
+```go
+type testData struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+type testOpener struct {}
+
+// Use a static path, or something in a global or package scope
+func (testOpener) Path(name string) string {
+    return filepath.Join("./configs", name)
+}
+type testObject struct {
+    ObjString JsonIncludeOpener[testOpener, testData] `json:"objstring"`
+}
+func main() {
+    var obj testObject
+    f, _ := os.Open("rootfile.json")
+    // Handle the error
+    json.NewDecoder(f).Decode(&obj)
+    // obj.ObjString.Val contains the data regardless of if its imported or embedded
+}
+
+```
+
+### Advanced Usage with Specific Prefix path
+
+Use these methods if there needs to be some special rule around each key. This lets you create your own configuration as needed.
+
+```json
+{
+    "objstring": {
+        "include": "string.json"
+    },
+}
+```
+
+```go
+type testData struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+type testOpener string
+
+// Use a static path, or something in a more global scope
+func (p testOpener) Path(name string) string {
+    return filepath.Join(string(p), name)
+}
+type testObject struct {
+    ObjString JsonIncludeOpener[testOpener, testData] `json:"objstring"`
+}
+func main() {
+    var obj testObject
+    
+    obj.ObjString.Config = testOpener("./config")
+
+    f, _ := os.Open("rootfile.json")
+    // Handle the error
+    json.NewDecoder(f).Decode(&obj)
+    // obj.ObjString.Val contains the data regardless of if its imported or embedded
+}
+
 ```
