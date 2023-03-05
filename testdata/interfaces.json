@@ -1,0 +1,14 @@
+{
+    "objopenerstring": {
+        "include": "string.json"
+    },
+    "objopenerstruct": {
+        "include": "struct.json"
+    },
+    "objreaderstring": {
+        "include": "string.json"
+    },
+    "objreaderstruct": {
+        "include": "struct.json"
+    }
+}

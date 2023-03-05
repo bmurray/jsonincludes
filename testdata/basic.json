@@ -1,0 +1,37 @@
+{
+    "name": "Sphinx",
+    "objstring": "Sphinx",
+    "objstruct": {
+        "name": "Sphinx",
+        "age": 123
+    },
+    "objint": 123,
+    "objarray": [
+        {
+            "name": "Sphinx",
+            "age": 123
+        },
+        {
+            "name": "King",
+            "age": 321
+        }
+    ],
+    "objincludestring": {
+        "include": "./testdata/string.json"
+    },
+    "objincludesint": {
+        "include": "./testdata/int.json"
+    },
+    "objincludestruct": {
+        "include": "./testdata/struct.json"
+    },
+    "objincludearray": {
+        "include": "./testdata/array.json"
+    },
+    "objectincludestringopener": {
+        "include": "string.json"
+    },
+    "objectincludestringreader": {
+        "include": "string.json"
+    }
+}
