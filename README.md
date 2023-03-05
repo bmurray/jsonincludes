@@ -50,7 +50,7 @@ This package makes adding external includes easy. You can import parts of a JSON
 
 ```
 
-Note, any files that are included are using the current working directory. You may change this behavior by implementing the JsonData or JsonReader interfaces. See the _test.go file for details.
+Note, any files that are included are using the current working directory. You may change this behavior by implementing the JsonData or JsonReader interfaces. See the _test.go file for details. Check the testdata directory for complete examples.
 
 ```go
 type testData struct {
@@ -68,7 +68,8 @@ type testObject struct {
 	ObjIncludesStruct JsonInclude[testData]   `json:"objincludestruct"`
 	ObjIncludesArray  JsonInclude[[]testData] `json:"objincludearray"`
 }
-var obj testObject
+func main() {
+    var obj testObject
 	f, err := os.Open("rootfile.json")
 	if err != nil {
 		// Handle the error
@@ -78,4 +79,5 @@ var obj testObject
 	if err != nil {
 		// Handle the error
 	}
+}
 ```
