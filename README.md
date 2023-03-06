@@ -47,12 +47,6 @@ Check the _tests.go file for a deeper usage example.
     "objincludearray": {
         "include": "array.json"
     },
-    "objectincludestringopener": {
-        "include": "string.json"
-    },
-    "objectincludestringreader": {
-        "include": "string.json"
-    }
 }
 
 ```
@@ -66,16 +60,21 @@ type testData struct {
 }
 type testObject struct {
 	testData
-	ObjString         JsonInclude[string]     `json:"objstring"`
-	ObjInt            JsonInclude[int]        `json:"objint"`
-	ObjStruct         JsonInclude[testData]   `json:"objstruct"`
-	ObjArray          JsonInclude[[]testData] `json:"objarray"`
-	ObjIncludesString JsonInclude[string]     `json:"objincludestring"`
-	ObjIncludesInt    JsonInclude[int]        `json:"objincludesint"`
-	ObjIncludesStruct JsonInclude[testData]   `json:"objincludestruct"`
-	ObjIncludesArray  JsonInclude[[]testData] `json:"objincludearray"`
+
+	ObjString                 jsonincludes.JsonInclude[string]     `json:"objstring"`
+	ObjInt                    jsonincludes.JsonInclude[int]        `json:"objint"`
+	ObjStruct                 jsonincludes.JsonInclude[testData]   `json:"objstruct"`
+	ObjArray                  jsonincludes.JsonInclude[[]testData] `json:"objarray"`
+	ObjIncludesString         jsonincludes.JsonInclude[string]     `json:"objincludesstring"`
+	ObjIncludesInt            jsonincludes.JsonInclude[int]        `json:"objincludesint"`
+	ObjIncludesStruct         jsonincludes.JsonInclude[testData]   `json:"objincludesstruct"`
+	ObjIncludesArray          jsonincludes.JsonInclude[[]testData] `json:"objincludesarray"`
+
 }
 func main() {
+
+    // use this to change the relative path of the includes while using JsonInclude
+    // jsonincludes.SetRootPath("relative_path")
     var obj testObject
 	f, err := os.Open("rootfile.json")
 	if err != nil {
@@ -113,7 +112,7 @@ func (testOpener) Path(name string) string {
     return filepath.Join("./configs", name)
 }
 type testObject struct {
-    ObjString JsonIncludeOpener[testOpener, testData] `json:"objstring"`
+    ObjString jsonincludes.JsonBase[testOpener, testData] `json:"objstring"`
 }
 func main() {
     var obj testObject
@@ -149,7 +148,7 @@ func (p testOpener) Path(name string) string {
     return filepath.Join(string(p), name)
 }
 type testObject struct {
-    ObjString JsonIncludeOpener[testOpener, testData] `json:"objstring"`
+    ObjString JsonBase[testOpener, testData] `json:"objstring"`
 }
 func main() {
     var obj testObject

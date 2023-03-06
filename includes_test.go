@@ -1,12 +1,15 @@
-package jsonincludes
+package jsonincludes_test
 
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/bmurray/jsonincludes"
 )
 
 type testData struct {
@@ -15,19 +18,92 @@ type testData struct {
 }
 type testObject struct {
 	testData
-	ObjString         JsonInclude[string]     `json:"objstring"`
-	ObjInt            JsonInclude[int]        `json:"objint"`
-	ObjStruct         JsonInclude[testData]   `json:"objstruct"`
-	ObjArray          JsonInclude[[]testData] `json:"objarray"`
-	ObjIncludesString JsonInclude[string]     `json:"objincludestring"`
-	ObjIncludesInt    JsonInclude[int]        `json:"objincludesint"`
-	ObjIncludesStruct JsonInclude[testData]   `json:"objincludestruct"`
-	ObjIncludesArray  JsonInclude[[]testData] `json:"objincludearray"`
+	ObjString         jsonincludes.JsonInclude[string]     `json:"objstring"`
+	ObjInt            jsonincludes.JsonInclude[int]        `json:"objint"`
+	ObjStruct         jsonincludes.JsonInclude[testData]   `json:"objstruct"`
+	ObjArray          jsonincludes.JsonInclude[[]testData] `json:"objarray"`
+	ObjIncludesString jsonincludes.JsonInclude[string]     `json:"objincludestring"`
+	ObjIncludesInt    jsonincludes.JsonInclude[int]        `json:"objincludesint"`
+	ObjIncludesStruct jsonincludes.JsonInclude[testData]   `json:"objincludestruct"`
+	ObjIncludesArray  jsonincludes.JsonInclude[[]testData] `json:"objincludearray"`
 }
 
 func TestJsonInclude(t *testing.T) {
 	var obj testObject
 	f, err := os.Open("testdata/basic.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	err = json.NewDecoder(f).Decode(&obj)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if obj.ObjString.Val != "Sphinx" {
+		t.Fatal("string not loaded", obj.ObjString.Val)
+	}
+	if obj.ObjInt.Val != 123 {
+		t.Fatal("int not loaded")
+	}
+	if obj.ObjStruct.Val.Name != "Sphinx" {
+		t.Fatal("struct not loaded")
+	}
+	if obj.ObjArray.Val[0].Name != "Sphinx" {
+		t.Fatal("array not loaded")
+	}
+	if obj.ObjIncludesString.Val != "Sphinx" {
+		t.Fatal("include string not loaded", obj.ObjIncludesString.Val)
+	}
+	if obj.ObjIncludesInt.Val != 123 {
+		t.Fatal("include int not loaded")
+	}
+	if obj.ObjIncludesStruct.Val.Name != "Sphinx" {
+		t.Fatal("include struct not loaded")
+	}
+	if obj.ObjIncludesArray.Val[0].Name != "Sphinx" {
+		t.Fatal("include array not loaded")
+	}
+	output := &bytes.Buffer{}
+	err = json.NewEncoder(output).Encode(obj)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(output.String())
+	var obj2 testObject
+	err = json.NewDecoder(output).Decode(&obj2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if obj2.ObjString.Val != "Sphinx" {
+		t.Fatal("string not loaded", obj2.ObjString.Val)
+	}
+	if obj2.ObjInt.Val != 123 {
+		t.Fatal("int not loaded")
+	}
+	if obj2.ObjStruct.Val.Name != "Sphinx" {
+		t.Fatal("struct not loaded")
+	}
+	if obj2.ObjArray.Val[0].Name != "Sphinx" {
+		t.Fatal("array not loaded")
+	}
+	if obj2.ObjIncludesString.Val != "Sphinx" {
+		t.Fatal("include string not loaded", obj2.ObjIncludesString.Val)
+	}
+	if obj2.ObjIncludesInt.Val != 123 {
+		t.Fatal("include int not loaded")
+	}
+	if obj2.ObjIncludesStruct.Val.Name != "Sphinx" {
+		t.Fatal("include struct not loaded")
+	}
+	if obj2.ObjIncludesArray.Val[0].Name != "Sphinx" {
+		t.Fatal("include array not loaded")
+	}
+}
+
+func TestJsonIncludeRelative(t *testing.T) {
+	jsonincludes.SetRootPath("testdata")
+	var obj testObject
+	f, err := os.Open("testdata/basic_relative.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,10 +283,10 @@ func (t testReaderStruct) Reader(name string) (io.Reader, error) {
 
 type testObjectPathers struct {
 	testData
-	ObjOpenerString JsonIncludeOpener[testPather, string]   `json:"objopenerstring"`
-	ObjOpenerStruct JsonIncludeOpener[testPather, testData] `json:"objopenerstruct"`
-	ObjReaderString JsonIncludeOpener[testDataer, string]   `json:"objreaderstring"`
-	ObjReaderStruct JsonIncludeOpener[testReader, testData] `json:"objreaderstruct"`
+	ObjOpenerString jsonincludes.JsonBase[testPather, string]   `json:"objopenerstring"`
+	ObjOpenerStruct jsonincludes.JsonBase[testPather, testData] `json:"objopenerstruct"`
+	ObjReaderString jsonincludes.JsonBase[testDataer, string]   `json:"objreaderstring"`
+	ObjReaderStruct jsonincludes.JsonBase[testReader, testData] `json:"objreaderstruct"`
 }
 
 func TestPather(t *testing.T) {
@@ -263,10 +339,10 @@ func TestPather(t *testing.T) {
 
 type testObjectPrefixers struct {
 	testData
-	ObjOpenerString JsonIncludeOpener[testPather, string]         `json:"objopenerstring"`
-	ObjOpenerStruct JsonIncludeOpener[testPather, testData]       `json:"objopenerstruct"`
-	ObjReaderString JsonIncludeOpener[testPrefixDataer, string]   `json:"objreaderstring"`
-	ObjReaderStruct JsonIncludeOpener[testPrefixReader, testData] `json:"objreaderstruct"`
+	ObjOpenerString jsonincludes.JsonBase[testPather, string]         `json:"objopenerstring"`
+	ObjOpenerStruct jsonincludes.JsonBase[testPather, testData]       `json:"objopenerstruct"`
+	ObjReaderString jsonincludes.JsonBase[testPrefixDataer, string]   `json:"objreaderstring"`
+	ObjReaderStruct jsonincludes.JsonBase[testPrefixReader, testData] `json:"objreaderstruct"`
 }
 
 func TestPrefixers(t *testing.T) {
@@ -319,8 +395,8 @@ func TestPrefixers(t *testing.T) {
 
 type testObjectPatherConfigure struct {
 	testData
-	ObjOpenerString JsonIncludeOpener[testPatherConfigure, string]   `json:"objopenerstring"`
-	ObjOpenerStruct JsonIncludeOpener[testPatherConfigure, testData] `json:"objopenerstruct"`
+	ObjOpenerString jsonincludes.JsonBase[testPatherConfigure, string]   `json:"objopenerstring"`
+	ObjOpenerStruct jsonincludes.JsonBase[testPatherConfigure, testData] `json:"objopenerstruct"`
 }
 
 func TestPatherConfigure(t *testing.T) {
@@ -365,16 +441,17 @@ func TestPatherConfigure(t *testing.T) {
 
 type testObjectInterfaces struct {
 	testData
-	ObjOpenerString JsonInclude[testOpenerString] `json:"objopenerstring"`
-	ObjOpenerStruct JsonInclude[testOpenerStruct] `json:"objopenerstruct"`
-	ObjReaderString JsonInclude[testReaderString] `json:"objreaderstring"`
-	ObjReaderStruct JsonInclude[testReaderStruct] `json:"objreaderstruct"`
+	ObjOpenerString jsonincludes.JsonCombo[testOpenerString] `json:"objopenerstring"`
+	ObjOpenerStruct jsonincludes.JsonCombo[testOpenerStruct] `json:"objopenerstruct"`
+	ObjReaderString jsonincludes.JsonCombo[testReaderString] `json:"objreaderstring"`
+	ObjReaderStruct jsonincludes.JsonCombo[testReaderStruct] `json:"objreaderstruct"`
 }
 
 func TestInterfaces(t *testing.T) {
 	var obj testObjectInterfaces
-	obj.ObjOpenerString.Val = testOpenerString("./testdata")
-	obj.ObjReaderString.Val = testReaderString("./testdata")
+
+	obj.ObjOpenerString.Config = testOpenerString("./testdata")
+	obj.ObjReaderString.Config = testReaderString("./testdata")
 
 	f, err := os.Open("testdata/interfaces.json")
 	if err != nil {
@@ -425,7 +502,7 @@ func TestInterfaces(t *testing.T) {
 
 type testObjectInterfaceBad struct {
 	testData
-	ObjOpenerString JsonInclude[testOpenerStruct] `json:"objopenerstring"`
+	ObjOpenerString jsonincludes.JsonInclude[testOpenerStruct] `json:"objopenerstring"`
 }
 
 func TestBadInterfaces(t *testing.T) {
@@ -455,10 +532,12 @@ func (t testReaderHidden) Reader(name string) (io.Reader, error) {
 }
 
 func TestHiddenFolder(t *testing.T) {
-	var obj JsonInclude[testReaderHidden]
+	var obj jsonincludes.JsonCombo[testReaderHidden]
+	obj.Config.rootPath = "./testdata"
 	obj.Val.rootPath = "./testdata"
+
 	var x = struct {
-		Obj JsonInclude[testReaderHidden] `json:"obj"`
+		Obj jsonincludes.JsonCombo[testReaderHidden] `json:"obj"`
 	}{obj}
 	err := json.Unmarshal([]byte(`{"obj": {"include": "struct.json"}}`), &x)
 	if err != nil {
@@ -474,7 +553,7 @@ func TestHiddenFolder(t *testing.T) {
 	}
 	t.Log(output.String())
 	var y = struct {
-		Obj JsonInclude[testReaderHidden] `json:"obj"`
+		Obj jsonincludes.JsonCombo[testReaderHidden] `json:"obj"`
 	}{}
 	if err := json.Unmarshal(output.Bytes(), &y); err != nil {
 		t.Fatal(err)
@@ -482,4 +561,22 @@ func TestHiddenFolder(t *testing.T) {
 	if y.Obj.Val.Name != "Sphinx" {
 		t.Fatal("include struct not loaded", y.Obj.Val.Name)
 	}
+}
+
+func ExampleJsonInclude() {
+	// Set the root path for all includes
+	jsonincludes.SetRootPath("./testdata")
+	type testObject struct {
+		// Use the JsonInclude type to use the convience SetRootPath function
+		StringValue jsonincludes.JsonInclude[string] `json:"stringvalue"`
+	}
+	var obj testObject
+
+	// This will open the file "string.json" in the root path "./testdata"
+	err := json.Unmarshal([]byte(`{"stringvalue": {"include": "string.json"}}`), &obj)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(obj.StringValue.Val)
+	// Output: Sphinx
 }
