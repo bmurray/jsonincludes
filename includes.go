@@ -112,3 +112,30 @@ func (j *JsonBase[Y, T]) UnmarshalJSON(data []byte) error {
 func (j JsonBase[Y, T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(j.Val)
 }
+
+// Downmap converts a map of JsonInclude to a map of the underlying type.
+func Downmap[T comparable, Y any](x map[T]JsonInclude[Y]) map[T]Y {
+	y := make(map[T]Y)
+	for k, v := range x {
+		y[k] = v.Val
+	}
+	return y
+}
+
+// DownmapBase converts a map of JsonBase to a map of the underlying type.
+func DownmapBase[T comparable, Y any, Z any](x map[T]JsonBase[Z, Y]) map[T]Y {
+	y := make(map[T]Y)
+	for k, v := range x {
+		y[k] = v.Val
+	}
+	return y
+}
+
+// DownmapCombo converts a map of JsonCombo to a map of the underlying type.
+func DownmapCombo[T comparable, Y any](x map[T]JsonCombo[Y]) map[T]Y {
+	y := make(map[T]Y)
+	for k, v := range x {
+		y[k] = v.Val
+	}
+	return y
+}
