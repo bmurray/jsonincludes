@@ -44,6 +44,9 @@ type Resolver struct{}
 
 // Path returns the path relative to the root path.
 func (Resolver) Path(name string) string {
+	return Path(name)
+}
+func Path(name string) string {
 	return filepath.Join(rootPath, name)
 }
 
