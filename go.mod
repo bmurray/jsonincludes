@@ -1,3 +1,3 @@
 module github.com/bmurray/jsonincludes
 
-go 1.19
+go 1.20
